@@ -53,3 +53,22 @@ Silverlight技術はWindowsのIEでのみ動くのに対して、Widevineは一�
 ["Silverlight End of Support"](https://support.microsoft.com/en-gb/help/4511036/silverlight-end-of-support)
 
 Microsoft Silverlightは2021年の10月12日に終わりを迎えます。(`the Silverlight installer will no longer be available after the end of support date of October 12, 2021.`とあるのでダウンロードもできなくなります)Silverlight 開発フレームワークは現在Internet Explorer 11のみをサポートしていて、既にInternet Explorer 10のサポートは2020年の1月31日で終了しています。そしてもう、Chrome, Firefoxや他のブラウザ、そしてmacOSでは対応していません。
+## 設定画面（Options）
+
+`about:addons` から ToshinFox の設定を開くと、以下を切り替えできます。
+
+- 機能トグル（連打警告除去、過去問新規タブ化、高速マスター高速化、UA書き換え、講座名補完）
+- プレイヤー補助（A-Bリピート、ブックマーク、メモ、再生速度プリセット）
+- 字幕/テロップ補助（サイズ、行間、高コントラスト）
+- キーボードショートカット
+
+## ルール診断
+
+設定画面の「ルール診断」から、どのrewriteルールが何回適用されたか、最終適用URLを確認できます。
+トラブル時は、問題のページを開いたあと診断を更新すると原因切り分けがしやすくなります。
+
+## トラブルシュート
+
+- プレイヤーが開かない場合は、設定画面で「UA書き換え」をONにしてください。
+- サイト更新直後に不具合が出た場合は、機能トグルを一時的にOFFにして影響範囲を確認してください。
+- 視聴履歴送信の検証をしたい場合は「視聴ログ送信を無効化」をONにしてください。

@@ -1,35 +1,49 @@
-var url = window.location.href;
+const url = window.location.href;
+const locationUrl = new URL(url);
 
-if (url.includes("https://pos.toshin.com/OPSTTS/OPSTTS_Student")) {
-    console.log("This is 過去問二次ページ!!");
-
-    forceOpenInNewTab();
+function readSettingsFromDataset() {
+  try {
+    const encoded = document.documentElement.dataset.toshinfoxSettings;
+    return encoded ? JSON.parse(decodeURIComponent(encoded)) : {};
+  } catch (_error) {
+    return {};
+  }
 }
 
-function forceOpenInNewTab(){
-    var links = document.getElementsByTagName("a");
-    for(var i=0; i< links.length; i++){
-        if(links[i].textContent == "戻る"){
-            links[i].href="javascript:close();";
-        } else if(links[i].href.includes("/OPSTTS/OPSTTS_Student/ZentaiRireki")|| links[i].href.includes("/OPSTTS/OPSTTS_Student/KozaTop") || links[i].textContent == "取得講座一覧へ"){
-            // 変更なし
-        } else {
-            links[i].target = "_blank";
-        }
+function forceOpenInNewTab() {
+  const links = document.getElementsByTagName('a');
+  for (let i = 0; i < links.length; i++) {
+    if (links[i].textContent === '戻る') {
+      links[i].href = 'javascript:close();';
+    } else if (
+      links[i].href.includes('/OPSTTS/OPSTTS_Student/ZentaiRireki') ||
+      links[i].href.includes('/OPSTTS/OPSTTS_Student/KozaTop') ||
+      links[i].textContent === '取得講座一覧へ'
+    ) {
+      // no-op
+    } else {
+      links[i].target = '_blank';
     }
+  }
 
-    var forms = document.getElementsByTagName("form");
-    for(var i=0; i< forms.length; i++){
-        if(forms[i].action == "https://pos.toshin.com/OPSTTS/OPSTTS_Student/EnshuKaishi"){
-            forms[i].target = "_blank";
-        }
+  const forms = document.getElementsByTagName('form');
+  for (let i = 0; i < forms.length; i++) {
+    if (forms[i].action === 'https://pos.toshin.com/OPSTTS/OPSTTS_Student/EnshuKaishi') {
+      forms[i].target = '_blank';
     }
+  }
 
-    var buttons = document.getElementsByTagName("button");
-    for(var i=0; i< buttons.length; i++){
-        if(buttons[i].value.includes("/OPSTTS/OPSTTS_Student/KaitoYoshiInsatsu?EnshuSetId=")){
-            buttons[i].value = "/OPSTTS/OPSTTS_Student/Contents/GetAnswerSheetPdf?" + buttons[i].value.split("?")[1];
-        }
+  const buttons = document.getElementsByTagName('button');
+  for (let i = 0; i < buttons.length; i++) {
+    if (buttons[i].value && buttons[i].value.includes('/OPSTTS/OPSTTS_Student/KaitoYoshiInsatsu?EnshuSetId=')) {
+      buttons[i].value = '/OPSTTS/OPSTTS_Student/Contents/GetAnswerSheetPdf?' + buttons[i].value.split('?')[1];
     }
+  }
+}
 
+if (locationUrl.origin === 'https://pos.toshin.com' && locationUrl.pathname.startsWith('/OPSTTS/OPSTTS_Student')) {
+  const settings = readSettingsFromDataset();
+  if (settings?.features?.forceOpsttsNewTab !== false) {
+    forceOpenInNewTab();
+  }
 }

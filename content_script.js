@@ -1,89 +1,146 @@
-var url = window.location.href;
+const url = window.location.href;
+const locationUrl = new URL(url);
 
-console.log("link -> " + url);
-
-injectScript("content_interception.js");
-
-
-// https://fonts.google.com/?preview.text=%20%E7%94%9F%E5%BE%92%E7%95%AA%E5%8F%B7%EF%BC%9A%20%E5%8F%A4%E6%A9%8B%20%E6%96%87%E4%B9%83(10%2F23)%20%E5%AD%A6%E5%B9%B4%EF%BC%9A%20%E9%AB%98%EF%BC%93%20&preview.text_type=custom&subset=japanese
-
-var gettingItem = browser.storage.sync.get('font');
-gettingItem.then((res) => {
-    injectStyleSheet("https://fonts.googleapis.com/css?family=" + encodeURIComponent(res.font || 'M PLUS Rounded 1c'), res.font || 'M PLUS Rounded 1c');
-});
-
-if (url.toLowerCase().includes("https://pos.toshin.com/jkmr/student2/stdkobetsujukoyoyaku/kosuselect")) {
-    injectScriptsForKosuSelect();
-} else if (url.includes("https://pos2.toshin.com/VODPAS/")) {
-    console.log("Injecting scripts & styles to PlayerSelector Page...");
-    injectScriptsForPlayPage();
-} else if (url.indexOf("https://pos.toshin.com/sso1/ssomenu/sessionerror.html?aspxerrorpath=") != -1) {
-    console.log("Redirecting to LoginPage...");
-    redirectToLoginPage();
-} else if (url.includes("https://pos.toshin.com/OPSTTS/OPSTTS_Student")){
-    console.log("Injecting scripts Kakomon Page...");
-    injectScriptsForKakomon();
+function isToshinPath(origin, prefix) {
+  return locationUrl.origin === origin && locationUrl.pathname.startsWith(prefix);
 }
 
-async function injectScriptsForPlayPage() {
+const DEFAULT_SETTINGS = {
+  font: 'M PLUS Rounded 1c',
+  debug_do_not_send_watch_log: false,
+  features: {
+    forceOpsttsNewTab: true,
+    injectKosuNames: true
+  },
+  subtitle: {
+    fontSize: 100,
+    lineHeight: 130,
+    highContrast: false
+  }
+};
 
-    await injectScript('scripts/PlayerSelector.js');
-
-    /*await injectScript('https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js');
-
-    await injectScript('https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js');
-
-    await injectScript('https://code.getmdl.io/1.3.0/material.min.js');
-    await injectScript('https://shaka-player-demo.appspot.com/node_modules/eme-encryption-scheme-polyfill/index.js');
-    await injectScript('https://shaka-player-demo.appspot.com/node_modules/material-design-lite/dist/material.min.js');
-    await injectScript('https://shaka-player-demo.appspot.com/node_modules/dialog-polyfill/dist/dialog-polyfill.js');
-    
-    await injectScript('https://ajax.googleapis.com/ajax/libs/shaka-player/3.1.0/shaka-player.ui.debug.js');
-    await injectScript('https://www.gstatic.com/cv/js/sender/v1/cast_sender.js');*/
-}
-
-async function injectScriptsForKosuSelect() {
-    await injectScript('scripts/KosuSelect.js');
-}
-
-async function injectScriptsForKakomon(){
-    await injectScript('scripts/OPSTTS_Student.js');
-}
-
-async function redirectToLoginPage() {
-    browser.runtime.sendMessage({"title": "セッション情報が破棄されたので再ログインしてください","message": "東進学力POSでは個人情報保護の観点より、一定時間操作が無かった場合にセッション情報を破棄しています。"})
-    window.location.href = "https://pos.toshin.com/SSO1/SSOLogin/StudentLogin.aspx";
-}
-
-async function addFontChangeListener(){
-    await fontChangeListener();
+function deepMerge(base, override) {
+  if (!override || typeof override !== 'object') {
+    return structuredClone(base);
+  }
+  const output = Array.isArray(base) ? [...base] : { ...base };
+  for (const key of Object.keys(override)) {
+    const nextVal = override[key];
+    const baseVal = base[key];
+    if (Array.isArray(baseVal)) {
+      output[key] = Array.isArray(nextVal) ? nextVal : [...baseVal];
+    } else if (baseVal && typeof baseVal === 'object') {
+      output[key] = deepMerge(baseVal, nextVal);
+    } else {
+      output[key] = nextVal;
+    }
+  }
+  return output;
 }
 
 function injectScript(scriptName) {
-    return new Promise(function (resolve, reject) {
-        var s = document.createElement('script');
-        s.src = browser.runtime.getURL(scriptName);
-        s.onload = function () {
-            resolve(true);
-        };
-        (document.head || document.documentElement).appendChild(s);
-    });
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = browser.runtime.getURL(scriptName);
+    script.onload = () => resolve(true);
+    (document.head || document.documentElement).appendChild(script);
+  });
 }
 
-// <link href="https://fonts.googleapis.com/css?family=Noto+Sans+JP" rel="stylesheet">
-
-function injectStyleSheet(styleName, font_name) {
-    return new Promise(function (resolve, reject) {
-        var s = document.createElement('link');
-        s.href = browser.runtime.getURL(styleName);
-        s.rel = "stylesheet";
-        s.onload = function () {
-            resolve(true);
-        };
-        (document.head || document.documentElement).appendChild(s);
-        var elements = document.querySelectorAll('*');
-        for(var i=0;i<elements.length;i++){
-            elements[i].style.fontFamily = "\"" + font_name + "\"";
-        }
-    });
+function resolveStyleHref(stylePath) {
+  return /^https?:\/\//i.test(stylePath) ? stylePath : browser.runtime.getURL(stylePath);
 }
+
+function injectStyleSheet(stylePath, fontName) {
+  return new Promise((resolve) => {
+    const link = document.createElement('link');
+    link.href = resolveStyleHref(stylePath);
+    link.rel = 'stylesheet';
+    link.onload = () => resolve(true);
+    (document.head || document.documentElement).appendChild(link);
+
+    if (fontName) {
+      const elements = document.querySelectorAll('*');
+      for (let i = 0; i < elements.length; i++) {
+        elements[i].style.fontFamily = `"${fontName}"`;
+      }
+    }
+  });
+}
+
+function appendPlayerAssistStyle(settings) {
+  if (!isToshinPath('https://pos2.toshin.com', '/VODPAS/')) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  const fontSize = Math.max(70, Math.min(200, Number(settings.subtitle?.fontSize) || 100));
+  const lineHeight = Math.max(100, Math.min(220, Number(settings.subtitle?.lineHeight) || 130));
+  const contrastCss = settings.subtitle?.highContrast
+    ? 'text-shadow: 0 0 4px #000, 0 0 8px #000; color: #fff !important; background: rgba(0,0,0,.45);'
+    : '';
+
+  style.textContent = `
+    .shaka-text-container span {
+      font-size: ${fontSize}% !important;
+      line-height: ${lineHeight}% !important;
+      ${contrastCss}
+    }
+  `;
+
+  (document.head || document.documentElement).appendChild(style);
+}
+
+function exposeSettingsToPage(settings) {
+  document.documentElement.dataset.toshinfoxSettings = encodeURIComponent(JSON.stringify(settings));
+}
+
+async function redirectToLoginPage() {
+  browser.runtime.sendMessage({
+    title: 'セッション情報が破棄されたので再ログインしてください',
+    msg: '東進学力POSでは個人情報保護の観点より、一定時間操作が無かった場合にセッション情報を破棄しています。'
+  });
+  window.location.href = 'https://pos.toshin.com/SSO1/SSOLogin/StudentLogin.aspx';
+}
+
+async function bootstrap() {
+  await injectScript('content_interception.js');
+
+  const storage = await browser.storage.sync.get(['settings', 'font', 'debug_do_not_send_watch_log']);
+  const mergedSettings = deepMerge(DEFAULT_SETTINGS, storage.settings || {});
+  if (!mergedSettings.font && storage.font) {
+    mergedSettings.font = storage.font;
+  }
+  if (typeof storage.debug_do_not_send_watch_log === 'boolean') {
+    mergedSettings.debug_do_not_send_watch_log = storage.debug_do_not_send_watch_log;
+  }
+
+  await injectStyleSheet(
+    `https://fonts.googleapis.com/css?family=${encodeURIComponent(mergedSettings.font || DEFAULT_SETTINGS.font)}`,
+    mergedSettings.font || DEFAULT_SETTINGS.font
+  );
+
+  exposeSettingsToPage(mergedSettings);
+  appendPlayerAssistStyle(mergedSettings);
+
+  if (
+    locationUrl.origin === 'https://pos.toshin.com' &&
+    locationUrl.pathname.toLowerCase().startsWith('/jkmr/student2/stdkobetsujukoyoyaku/kosuselect')
+  ) {
+    if (mergedSettings.features?.injectKosuNames) {
+      await injectScript('scripts/KosuSelect.js');
+    }
+  } else if (isToshinPath('https://pos2.toshin.com', '/VODPAS/')) {
+    await injectScript('scripts/PlayerSelector.js');
+  } else if (isToshinPath('https://pos.toshin.com', '/SSO1/SSOMenu/SessionError.html')) {
+    await redirectToLoginPage();
+  } else if (isToshinPath('https://pos.toshin.com', '/OPSTTS/OPSTTS_Student')) {
+    if (mergedSettings.features?.forceOpsttsNewTab) {
+      await injectScript('scripts/OPSTTS_Student.js');
+    }
+  }
+}
+
+bootstrap().catch((error) => {
+  console.error('[ToshinFox] content_script bootstrap failed:', error);
+});

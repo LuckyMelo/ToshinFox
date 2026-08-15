@@ -1,46 +1,61 @@
 {
-    "manifest_version": 2,
-    "name": "ToshinFox",
-    "version": "17.0b",
-    "description": "Help your study with Firefox, saying goodbye Internet Explorer",
-    "icons": {
-        "48": "icons/ic_main.png"
-    },
-    "permissions": [
-        "*://*.toshin.com/*",
-        "notifications",
-        "webRequest",
-        "webRequestBlocking",
-        "storage"
-    ],
-    "background": {
-        "scripts": ["background.js"]
-    },
-    "content_scripts": [
-        {
-            "matches": [
-                "*://*.toshin.com/*"
-            ],
-            "js": [
-                "content_script.js"
-            ],
-            "css": [
-                "./styles/main.css"
-            ],
-            "run_at": "document_end",
-            "match_about_blank": true,
-            "all_frames": true
-        }
-    ],
-    "applications": {
-        "gecko": {
-            "id": "tomo0611@hotmail.com"
-        }
-    },
-    "options_ui": {
-        "page": "./pages/extension_preferences.html",
-        "browser_style": true
-    },
-    "web_accessible_resources": ["content_interception.js","scripts/*","styles/*","pages/*"],
-    "content_security_policy": "script-src 'self' https://code.getmdl.io https://ajax.googleapis.com https://shaka-player-demo.appspot.com https://code.jquery.com https://cdn.rawgit.com https://*.gstatic.com https://fonts.googleapis.com; object-src 'self'"
+  "manifest_version": 3,
+  "name": "ToshinFox",
+  "version": "18.0b",
+  "description": "Help your study with Firefox, saying goodbye Internet Explorer",
+  "icons": {
+    "48": "icons/ic_main.png"
+  },
+  "permissions": [
+    "notifications",
+    "storage",
+    "webRequest",
+    "webRequestBlocking"
+  ],
+  "host_permissions": [
+    "*://*.toshin.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.toshin.com/*"
+      ],
+      "js": [
+        "content_script.js"
+      ],
+      "css": [
+        "styles/main.css"
+      ],
+      "run_at": "document_end",
+      "match_about_blank": true,
+      "all_frames": true
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tomo0611@hotmail.com"
+    }
+  },
+  "options_ui": {
+    "page": "pages/extension_preferences.html",
+    "open_in_tab": true
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content_interception.js",
+        "scripts/*",
+        "styles/*"
+      ],
+      "matches": [
+        "*://*.toshin.com/*"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
