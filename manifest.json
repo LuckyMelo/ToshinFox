@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "ToshinFox",
-  "version": "18.0b",
+  "version": "2.0.0",
   "description": "Help your study with Firefox, saying goodbye Internet Explorer",
   "icons": {
-    "48": "icons/ic_main.png"
+    "240": "icons/ic_main.png"
   },
   "permissions": [
     "notifications",
@@ -36,7 +36,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "tomo0611@hotmail.com"
+      "id": "toshinfox@luckymelo.com"
     }
   },
   "options_ui": {
