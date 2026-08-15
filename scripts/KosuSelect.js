@@ -1,53 +1,86 @@
+const kozaid = document.getElementById('LblKozaCode')?.innerText;
 
-// https://pos.toshin.com/JKMR/Student2/StdKobetsuJukoYoyaku/KosuSelect
-// https://test.toshin.com/TEST_2012/JKM/Student/StdKobetsuJukoYoyaku/KosuSelect
-// 大文字小文字区別なし
+if (!kozaid) {
+  console.warn('[ToshinFox] LblKozaCode not found.');
+}
 
-var kozaid = document.getElementById("LblKozaCode").innerText
+function normalizeWideText(value) {
+  return (value || '')
+    .replace(/[Ａ-Ｚａ-ｚ０-９！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？＠［＼］＾＿｀｛｜｝]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+    .replace(/[‐－―]/g, '-')
+    .replace(/[～〜]/g, '~')
+    .replace(/　/g, ' ');
+}
 
-$.ajax({
-    url: 'https://pos.toshin.com/KKS/KKS1/Page/Design/KozaInfo.aspx?KozaCode=' + kozaid + '&Refresh=1',
+function extractKozaMapWithDOM(html) {
+  const map = {};
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const rows = doc.querySelectorAll('td[nowrap="nowrap"][align="Center"][valign="Middle"]');
+    rows.forEach((td) => {
+      const code = td.textContent?.replace(/ /g, '');
+      const nameCell = td.nextElementSibling;
+      if (code && nameCell) {
+        map[code] = nameCell.textContent || '';
+      }
+    });
+  } catch (error) {
+    console.error('[ToshinFox] DOM parse failed, fallback to regex.', error);
+  }
+  return map;
+}
+
+function extractKozaMapFallback(html) {
+  const map = {};
+  const result = html.match(/<td nowrap="nowrap" align="Center" valign="Middle">.+?<\/td><td>.+?<\/td>/g);
+  if (!result) {
+    return map;
+  }
+
+  for (let i = 0; i < result.length; i++) {
+    const kozainfo = result[i].substring(51, result[i].length - 5).split('</td><td>');
+    const kozaNum = (kozainfo[0] || '').replace(/ /g, '');
+    const kozaName = kozainfo[1] || '';
+    if (kozaNum) {
+      map[kozaNum] = kozaName;
+    }
+  }
+
+  return map;
+}
+
+function applyKozaNames(kozaList) {
+  const title2List = document.getElementsByClassName('tit_02');
+  for (let i = 0; i < title2List.length; i++) {
+    const rawCode = title2List[i].innerText.replace(/ /g, '');
+    const name = kozaList[rawCode];
+    if (!name) {
+      continue;
+    }
+    const normalizedCode = normalizeWideText(title2List[i].innerText);
+    const normalizedName = normalizeWideText(name);
+    title2List[i].innerText = `${normalizedCode} - ${normalizedName}`;
+  }
+}
+
+function handleKozaResponse(html) {
+  const domMap = extractKozaMapWithDOM(html);
+  const kozaList = Object.keys(domMap).length ? domMap : extractKozaMapFallback(html);
+  applyKozaNames(kozaList);
+}
+
+if (kozaid) {
+  $.ajax({
+    url: `https://pos.toshin.com/KKS/KKS1/Page/Design/KozaInfo.aspx?KozaCode=${kozaid}&Refresh=1`,
     type: 'GET',
     statusCode: {
-        200: function (data) {
-            console.log(data);
-            const result = data.match(/<td nowrap="nowrap" align="Center" valign="Middle">.+?<\/td><td>.+?<\/td>/g);
-            if (result != null) {
-                var kozaList = {};
-                for (var i = 0; i < result.length; i++) {
-                    var kozainfo = result[i].substring(51, result[i].length - 5).split("</td><td>");
-                    var kozaNum = kozainfo[0].replace(/ /g, '');
-                    var kozaName = kozainfo[1];
-                    kozaList[kozaNum] = kozaName;
-                }
-                console.log(kozaList);
-                var title2List = document.getElementsByClassName("tit_02");
-                for (var i = 0; i < title2List.length; i++) {
-                    if (kozaList[title2List[i].innerText.replace(/ /g, '')]) {
-                        title2List[i].innerText = title2List[i].innerText.replace(/[Ａ-Ｚａ-ｚ０-９！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？＠［＼］＾＿｀｛｜｝]/g, function (s) { return String.fromCharCode(s.charCodeAt(0) - 0xfee0); }).replace(/[‐－―]/g, "-").replace(/[～〜]/g, "~").replace(/　/g, " ") + " - " + kozaList[title2List[i].innerText.replace(/ /g, '')].replace(/[Ａ-Ｚａ-ｚ０-９！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？＠［＼］＾＿｀｛｜｝]/g, function (s) { return String.fromCharCode(s.charCodeAt(0) - 0xfee0); }).replace(/[‐－―]/g, "-").replace(/[～〜]/g, "~").replace(/　/g, " ");
-                    }
-                }
-            }
-        },
-        302: function (data) {
-            console.log(data.responseText);
-            const result = data.responseText.match(/<td nowrap="nowrap" align="Center" valign="Middle">.+?<\/td><td>.+?<\/td>/g);
-            if (result != null) {
-                var kozaList = {};
-                for (var i = 0; i < result.length; i++) {
-                    var kozainfo = result[i].substring(51, result[i].length - 5).split("</td><td>");
-                    var kozaNum = kozainfo[0].replace(/ /g, '');
-                    var kozaName = kozainfo[1];
-                    kozaList[kozaNum] = kozaName;
-                }
-                console.log(kozaList);
-                var title2List = document.getElementsByClassName("tit_02");
-                for (var i = 0; i < title2List.length; i++) {
-                    if (kozaList[title2List[i].innerText.replace(/ /g, '')]) {
-                        title2List[i].innerText = title2List[i].innerText.replace(/[Ａ-Ｚａ-ｚ０-９！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？＠［＼］＾＿｀｛｜｝]/g, function (s) { return String.fromCharCode(s.charCodeAt(0) - 0xfee0); }).replace(/[‐－―]/g, "-").replace(/[～〜]/g, "~").replace(/　/g, " ") + " - " + kozaList[title2List[i].innerText.replace(/ /g, '')].replace(/[Ａ-Ｚａ-ｚ０-９！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？＠［＼］＾＿｀｛｜｝]/g, function (s) { return String.fromCharCode(s.charCodeAt(0) - 0xfee0); }).replace(/[‐－―]/g, "-").replace(/[～〜]/g, "~").replace(/　/g, " ");
-                    }
-                }
-            }
-        }
+      200(data) {
+        handleKozaResponse(data);
+      },
+      302(data) {
+        handleKozaResponse(data.responseText || '');
+      }
     }
-});
+  });
+}

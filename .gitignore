@@ -3,4 +3,5 @@ builds/
 *.zip
 *.xpi
 *.html
+!pages/*.html
 releases/

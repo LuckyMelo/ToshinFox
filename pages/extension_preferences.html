@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ToshinFox Preferences</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; line-height: 1.5; }
+    fieldset { margin-bottom: 16px; }
+    label { display: block; margin: 6px 0; }
+    input[type='text'], input[type='number'] { width: 320px; max-width: 100%; }
+    textarea { width: 100%; min-height: 180px; }
+    .inline { display: inline-block; margin-right: 12px; }
+    .status { color: #0a7a16; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>ToshinFox 設定</h1>
+  <form>
+    <fieldset>
+      <legend>基本設定</legend>
+      <label>Font <input id="font" type="text" /></label>
+      <label><input id="debug_do_not_send_watch_log" type="checkbox" /> 視聴ログ送信を無効化</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>機能トグル</legend>
+      <label><input id="feature_removeRapidClickAlert" type="checkbox" /> 連打クリック警告を除去</label>
+      <label><input id="feature_forceOpsttsNewTab" type="checkbox" /> 過去問ページを新規タブ化</label>
+      <label><input id="feature_fastMasterTurbo" type="checkbox" /> 高速マスター高速化</label>
+      <label><input id="feature_rewriteUserAgent" type="checkbox" /> UA書き換え</label>
+      <label><input id="feature_injectKosuNames" type="checkbox" /> 講座名補完</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>プレイヤー学習機能</legend>
+      <label>再生速度プリセット(カンマ区切り) <input id="player_speedPresets" type="text" /></label>
+      <label><input id="player_rememberSpeed" type="checkbox" /> 最終再生速度を記憶</label>
+      <label><input id="player_enableABRepeat" type="checkbox" /> A-Bリピート有効</label>
+      <label><input id="player_enableBookmarks" type="checkbox" /> ブックマーク有効</label>
+      <label><input id="player_enableNotes" type="checkbox" /> メモ有効</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>字幕・テロップ補助</legend>
+      <label>字幕サイズ(%) <input id="subtitle_fontSize" type="number" min="70" max="200" /></label>
+      <label>行間(%) <input id="subtitle_lineHeight" type="number" min="100" max="220" /></label>
+      <label><input id="subtitle_highContrast" type="checkbox" /> 高コントラスト表示</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>ショートカット</legend>
+      <label class="inline">進む <input id="shortcut_forwardKey" type="text" /></label>
+      <label class="inline">戻る <input id="shortcut_backwardKey" type="text" /></label>
+      <label class="inline">速度+ <input id="shortcut_speedUpKey" type="text" /></label>
+      <label class="inline">速度- <input id="shortcut_speedDownKey" type="text" /></label>
+      <label class="inline">PiP <input id="shortcut_pipKey" type="text" /></label>
+      <label class="inline">A点 <input id="shortcut_markAKey" type="text" /></label>
+      <label class="inline">B点 <input id="shortcut_markBKey" type="text" /></label>
+      <label class="inline">AB有効/無効 <input id="shortcut_repeatToggleKey" type="text" /></label>
+      <label class="inline">ブックマーク <input id="shortcut_bookmarkKey" type="text" /></label>
+      <label class="inline">メモ <input id="shortcut_noteKey" type="text" /></label>
+    </fieldset>
+
+    <button type="submit">保存</button>
+    <span id="save_status" class="status"></span>
+  </form>
+
+  <fieldset>
+    <legend>ルール診断</legend>
+    <button id="refresh_diagnostics" type="button">更新</button>
+    <button id="reset_diagnostics" type="button">リセット</button>
+    <textarea id="diagnostics_output" readonly></textarea>
+  </fieldset>
+
+  <script src="../scripts/extension_preferences.js"></script>
+</body>
+</html>
