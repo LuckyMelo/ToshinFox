@@ -1,4 +1,9 @@
 const url = window.location.href;
+const locationUrl = new URL(url);
+
+function isToshinPath(origin, prefix) {
+  return locationUrl.origin === origin && locationUrl.pathname.startsWith(prefix);
+}
 
 const DEFAULT_SETTINGS = {
   font: 'M PLUS Rounded 1c',
@@ -64,7 +69,7 @@ function injectStyleSheet(stylePath, fontName) {
 }
 
 function appendPlayerAssistStyle(settings) {
-  if (!url.includes('https://pos2.toshin.com/VODPAS/')) {
+  if (!isToshinPath('https://pos2.toshin.com', '/VODPAS/')) {
     return;
   }
 
@@ -118,15 +123,18 @@ async function bootstrap() {
   exposeSettingsToPage(mergedSettings);
   appendPlayerAssistStyle(mergedSettings);
 
-  if (url.toLowerCase().includes('https://pos.toshin.com/jkmr/student2/stdkobetsujukoyoyaku/kosuselect')) {
+  if (
+    locationUrl.origin === 'https://pos.toshin.com' &&
+    locationUrl.pathname.toLowerCase().startsWith('/jkmr/student2/stdkobetsujukoyoyaku/kosuselect')
+  ) {
     if (mergedSettings.features?.injectKosuNames) {
       await injectScript('scripts/KosuSelect.js');
     }
-  } else if (url.includes('https://pos2.toshin.com/VODPAS/')) {
+  } else if (isToshinPath('https://pos2.toshin.com', '/VODPAS/')) {
     await injectScript('scripts/PlayerSelector.js');
-  } else if (url.includes('https://pos.toshin.com/SSO1/SSOMenu/SessionError.html?aspxerrorpath=')) {
+  } else if (isToshinPath('https://pos.toshin.com', '/SSO1/SSOMenu/SessionError.html')) {
     await redirectToLoginPage();
-  } else if (url.includes('https://pos.toshin.com/OPSTTS/OPSTTS_Student')) {
+  } else if (isToshinPath('https://pos.toshin.com', '/OPSTTS/OPSTTS_Student')) {
     if (mergedSettings.features?.forceOpsttsNewTab) {
       await injectScript('scripts/OPSTTS_Student.js');
     }

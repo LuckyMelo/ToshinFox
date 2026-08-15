@@ -1,4 +1,5 @@
 const url = window.location.href;
+const locationUrl = new URL(url);
 
 function readSettingsFromDataset() {
   try {
@@ -40,7 +41,7 @@ function forceOpenInNewTab() {
   }
 }
 
-if (url.includes('https://pos.toshin.com/OPSTTS/OPSTTS_Student')) {
+if (locationUrl.origin === 'https://pos.toshin.com' && locationUrl.pathname.startsWith('/OPSTTS/OPSTTS_Student')) {
   const settings = readSettingsFromDataset();
   if (settings?.features?.forceOpsttsNewTab !== false) {
     forceOpenInNewTab();

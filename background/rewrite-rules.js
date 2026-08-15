@@ -37,13 +37,6 @@
           continue;
         }
 
-        word = word
-          .replace(/&amp;/g, '&')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&quot;/g, '"')
-          .replace(/&#039;/g, "'");
-
         if (word.includes('<span style = "text-decoration : overline">')) {
           const match = word.match(/>.+?<\/span>/g);
           if (!match || !match[0]) {
@@ -81,7 +74,7 @@
           d = d.substring(1, d.length - 1);
 
           const shakaPlayerElementsScript = browser.runtime.getURL('./scripts/PlayerSelectorShakaElements.js');
-          const serializedSettings = escapeAttributeValue(JSON.stringify(settings || {}));
+          const serializedSettings = btoa(unescape(encodeURIComponent(JSON.stringify(settings || {}))));
 
           return (
             '<!DOCTYPE html><head><title>PlayerSelector</title>' +
@@ -103,7 +96,7 @@
             '<video data-shaka-player autoplay id="video" poster="https://i.ytimg.com/vi/I631zx0ahn0/maxresdefault.jpg"></video></div></main>' +
             `<input id="initData" type="hidden" value="${d}"/>` +
             `<input id="debug_do_not_send_watch_log" type="hidden" value="${settings?.debug_do_not_send_watch_log || false}"/>` +
-            `<input id="toshinfox_settings" type="hidden" value="${serializedSettings}"/>` +
+            `<input id="toshinfox_settings" type="hidden" value="${escapeAttributeValue(serializedSettings)}"/>` +
             '</body></html>'
           );
         }
@@ -135,7 +128,7 @@
         name: 'fast_master_turbo',
         test: ({ url, settings }) => settings?.features?.fastMasterTurbo && url.includes('https://pos2.toshin.com/RBT2/RBT_Student/Js/training/BkotTrainingProcess.js'),
         apply: ({ str }) => {
-          let output = str.replace(/this.onAnswerCheck\(\);/g, '');
+          let output = str;
           output = output.replace('BkotTrainingProcess.C_ANSWER_MODE_CHECK;', 'BkotTrainingProcess.C_ANSWER_MODE_CHECK; this.onAnswerCheck();');
           return output.replace(/this._waitTimer.informTimeout\(\);/g, 'if(this.getIsImmediate()){if(this._currentQuestion._result==0){this._waitTimer.setMS(50);}else{this._waitTimer.setMS(2000);} this._waitTimer.informTimeout();}');
         }

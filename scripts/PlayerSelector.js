@@ -1,6 +1,7 @@
 const url = window.location.href;
+const locationUrl = new URL(url);
 
-if (url.includes('https://pos2.toshin.com/VODPAS/')) {
+if (locationUrl.origin === 'https://pos2.toshin.com' && locationUrl.pathname.startsWith('/VODPAS/')) {
   if (document.fdata !== undefined) {
     document.fdata.method = 'post';
     document.fdata.action = './PlayerSelector.aspx';
@@ -19,7 +20,8 @@ if (url.includes('https://pos2.toshin.com/VODPAS/')) {
 function getPageSettings() {
   try {
     const raw = document.getElementById('toshinfox_settings')?.value || '{}';
-    return JSON.parse(raw);
+    const decoded = decodeURIComponent(escape(atob(raw)));
+    return JSON.parse(decoded);
   } catch (_error) {
     return {};
   }
@@ -57,7 +59,7 @@ function decrypt(validdtm, d) {
   const aesCbc = new aesjs.ModeOfOperation.cbc(key, iv);
   const encryptedBytes = Uint8Array.from(atob(d), (c) => c.charCodeAt(0));
   const decryptedBytes = aesCbc.decrypt(encryptedBytes);
-  return aesjs.utils.utf8.fromBytes(decryptedBytes).replace('\r', '').replace('\n', '').replace(/[\u{0000}-\u{001F}]/gu, '');
+  return aesjs.utils.utf8.fromBytes(decryptedBytes).replace(/[\r\n]/g, '').replace(/[\u{0000}-\u{001F}]/gu, '');
 }
 
 function initApp(url_param, debug_do_not_send_watch_log) {
